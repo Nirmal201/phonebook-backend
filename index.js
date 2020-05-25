@@ -1,7 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
+const Person = require("./models/people");
 
 app.use(express.json());
 app.use(cors());
@@ -30,7 +32,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({}).then((persons) => {
+    res.json(persons);
+  });
+  // res.json(persons);
 });
 
 app.get("/info", (req, res) => {
@@ -41,17 +46,14 @@ app.get("/info", (req, res) => {
   );
 });
 
+// GET :id
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((p) => p.id === id);
-
-  if (person) {
+  Person.findById(req.params.id).then((person) => {
     res.json(person);
-  } else {
-    res.status(404).end();
-  }
+  });
 });
 
+//DELETE
 app.delete("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
   persons = persons.filter((person) => person.id !== id);
@@ -59,11 +61,7 @@ app.delete("/api/persons/:id", (req, res) => {
   res.status(204).end();
 });
 
-const gernerateId = () => {
-  const id = Math.floor(Math.random() * 1000000);
-  return id;
-};
-
+//POST
 app.post("/api/persons", (req, res) => {
   const body = req.body;
   if (body.name === "" && body.number === "") {
@@ -76,16 +74,13 @@ app.post("/api/persons", (req, res) => {
       error: "content missing",
     });
   }
-  const person = {
+  const person = new Person({
     name: body.name,
     number: Math.floor(Math.random() * 1000000000),
-    id: gernerateId(),
-  };
-  console.log("newperson", person);
-
-  persons = persons.concat(person);
-
-  res.json(person);
+  });
+  person.save().then((savedPerson) => {
+    res.json(savedPerson);
+  });
 });
 
 const requestLogger = (req, res, next) => {
@@ -105,7 +100,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on ${PORT}.....`);
 });
