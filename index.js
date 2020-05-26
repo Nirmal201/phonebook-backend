@@ -5,9 +5,9 @@ const cors = require("cors");
 const app = express();
 const Person = require("./models/people");
 
+// app.use(express.static("build"));
 app.use(express.json());
 app.use(cors());
-app.use(express.static("build"));
 
 morgan.token("justBaoddy", function (req, res) {
   return JSON.stringify(req.body);
@@ -19,13 +19,13 @@ app.use(
   )
 );
 
-let persons = [
-  { name: "Nirmal Patel", number: "909-112-3134", id: 1 },
-  { name: "Dan Abramov", number: "892-121231", id: 2 },
-  { name: "Ryan Folrence", number: "912-341-1231", id: 3 },
-  { name: "Joshua", number: "123-141-5131", id: 4 },
-  { name: "Lil Wayne", number: "413-313-4134", id: 5 },
-];
+// let persons = [
+//   { name: "Nirmal Patel", number: "909-112-3134", id: 1 },
+//   { name: "Dan Abramov", number: "892-121231", id: 2 },
+//   { name: "Ryan Folrence", number: "912-341-1231", id: 3 },
+//   { name: "Joshua", number: "123-141-5131", id: 4 },
+//   { name: "Lil Wayne", number: "413-313-4134", id: 5 },
+// ];
 
 app.get("/", (req, res) => {
   res.send("<h1>PhoneBook</h1>");
@@ -35,34 +35,51 @@ app.get("/api/persons", (req, res) => {
   Person.find({}).then((persons) => {
     res.json(persons);
   });
-  // res.json(persons);
 });
 
 app.get("/info", (req, res) => {
   let time = new Date();
 
-  res.send(
-    ` <div><p>Phonebook has info for ${persons.length} people.<p> ${time}</div>`
-  );
-});
-
-// GET :id
-app.get("/api/persons/:id", (req, res) => {
-  Person.findById(req.params.id).then((person) => {
-    res.json(person);
+  Person.countDocuments({}).then((count) => {
+    res.send(
+      ` <div><p>Phonebook has info for ${count} people.
+      <p> ${time}</div>`
+    );
   });
 });
 
-//DELETE
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter((person) => person.id !== id);
-
-  res.status(204).end();
+// GET :id
+app.get("/api/persons/:id", (req, res, next) => {
+  Person.findById(req.params.id)
+    .then((person) => {
+      if (person) {
+        res.json(person.toJSON());
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
+//DELETE
+// app.delete("/api/persons/:id", (req, res, next) => {
+//   console.log("I am alive");
+//   Person.findByIdAndRemove(req.params.id)
+//     .then((result) => {
+//       console.log("intelligecee");
+//       Person.find({}).then((persons) => {
+//         console.log("$log:Person.find({})", persons);
+//       });
+//       // return res.status(204).end();
+//     })
+//     .catch((error) => {
+//       console.log("getting printed from catch block..");
+//       next(error);
+//     });
+// });
+
 //POST
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
   if (body.name === "" && body.number === "") {
     return res.status(400).json({
@@ -76,20 +93,45 @@ app.post("/api/persons", (req, res) => {
   }
   const person = new Person({
     name: body.name,
-    number: Math.floor(Math.random() * 1000000000),
+    number: body.number,
+    // number: Math.floor(Math.random() * 1000000000),
   });
-  person.save().then((savedPerson) => {
-    res.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      res.json(savedPerson.toJSON());
+    })
+    .catch((error) => {
+      console.log(error.message);
+      res.send(`<h1>${error.message}</h1>`);
+      // res.send(`<h1>${error.res.data}</h1>`);
+
+      // return next(error);
+    });
 });
 
-const requestLogger = (req, res, next) => {
-  console.log("Method", req.method);
-  console.log("path", req.path);
-  console.log("boyd", req.body);
-  next();
-};
+app.put("/api/persons/:id", (req, res, next) => {
+  const body = req.body;
 
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatedNumber) => {
+      console.log(updatedNumber);
+
+      res.json(updatedNumber.toJSON());
+    })
+    .catch((error) => next(error));
+});
+
+// const requestLogger = (req, res, next) => {
+//   console.log("Method", req.method);
+//   console.log("path", req.path);
+//   console.log("body", req.body);
+//   next();
+// };
 // app.use(requestLogger);
 
 const unknownEndpoint = (request, response) => {
@@ -99,6 +141,18 @@ const unknownEndpoint = (request, response) => {
 };
 
 app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+  console.log(error.message);
+
+  if (error.name === "CastError" && error.kind == "ObjectId") {
+    return res.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
+  }
+  next(error);
+};
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
