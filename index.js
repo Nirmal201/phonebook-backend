@@ -62,21 +62,21 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 
 //DELETE
-// app.delete("/api/persons/:id", (req, res, next) => {
-//   console.log("I am alive");
-//   Person.findByIdAndRemove(req.params.id)
-//     .then((result) => {
-//       console.log("intelligecee");
-//       Person.find({}).then((persons) => {
-//         console.log("$log:Person.find({})", persons);
-//       });
-//       // return res.status(204).end();
-//     })
-//     .catch((error) => {
-//       console.log("getting printed from catch block..");
-//       next(error);
-//     });
-// });
+app.delete("/api/persons/:id", (req, res, next) => {
+  console.log("I am alive");
+  Person.findByIdAndRemove(req.params.id)
+    .then((result) => {
+      console.log("intelligecee");
+      Person.find({}).then((persons) => {
+        console.log("$log:Person.find({})", persons);
+      });
+      // return res.status(204).end();
+    })
+    .catch((error) => {
+      console.log("getting printed from catch block..");
+      next(error);
+    });
+});
 
 //POST
 app.post("/api/persons", (req, res, next) => {
@@ -103,7 +103,7 @@ app.post("/api/persons", (req, res, next) => {
     })
     .catch((error) => {
       console.log(error.message);
-      res.send(`<h1>${error.message}</h1>`);
+      res.send(error.message);
       // res.send(`<h1>${error.res.data}</h1>`);
 
       // return next(error);
