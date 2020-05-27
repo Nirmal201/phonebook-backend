@@ -70,7 +70,7 @@ app.delete("/api/persons/:id", (req, res, next) => {
       Person.find({}).then((persons) => {
         console.log("$log:Person.find({})", persons);
       });
-      // return res.status(204).end();
+      return res.status(204).end();
     })
     .catch((error) => {
       console.log("getting printed from catch block..");
