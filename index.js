@@ -62,20 +62,37 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 
 //DELETE
-app.delete("/api/persons/:id", (req, res, next) => {
-  console.log("I am alive");
-  Person.findByIdAndRemove(req.params.id)
-    .then((result) => {
-      console.log("intelligecee");
-      Person.find({}).then((persons) => {
-        console.log("$log:Person.find({})", persons);
-      });
-      return res.status(204).end();
-    })
-    .catch((error) => {
-      console.log("getting printed from catch block..");
-      next(error);
-    });
+// app.delete("/api/persons/:id", (req, res, next) => {
+//   console.log("I am alive");
+//   Person.findByIdAndRemove(req.params.id)
+//     .then((result) => {
+//       console.log("intelligecee");
+//       Person.find({}).then((persons) => {
+//         console.log("$log:Person.find({})", persons);
+//       });
+//       return res.status(204).end();
+//     })
+//     .catch((error) => {
+//       console.log("getting printed from catch block..");
+//       next(error);
+//     });
+// });
+
+app.delete("/api/persons/:id", async (req, res, next) => {
+  const exists = await Person.find({}).then((persons) =>
+    persons.map((p) => p.id).includes(req.params.id)
+  );
+  console.log(
+    "$$$$The person is",
+    exists ? "in database." : "not in database."
+  );
+  if (!exists) {
+    return res.status(400).end();
+  }
+
+  Person.findByIdAndRemove(req.params.id).then((result) => {
+    return res.status(204).end();
+  });
 });
 
 //POST

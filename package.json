@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build:ui": "rm -rf build && cd /Users/nirmalpatel/Documents/github/phonebook && npm run build --prod && cp -r build /Users/nirmalpatel/Documents/github/nodePhone",
+    "build:ui": "rm -rf build && cd /Users/nirmalpatel/Documents/github/PhoneBook/frontend-phonebook && npm run build --prod && cp -r build /Users/nirmalpatel/Documents/github/PhoneBook/backend-phonebook",
     "deploy": "git push heroku master",
     "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && npm run deploy",
     "logs:prod": "heroku logs --tail"
