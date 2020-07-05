@@ -5,7 +5,7 @@ const cors = require("cors");
 const app = express();
 const Person = require("./models/people");
 
-// app.use(express.static("build"));
+app.use(express.static("build"));
 app.use(express.json());
 app.use(cors());
 
