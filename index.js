@@ -28,7 +28,10 @@ app.use(
 // ];
 
 app.get("/", (req, res) => {
-  res.send("<h1>PhoneBook</h1>");
+  // res.send("<h1>PhoneBook</h1>");
+
+  const persons = await Person.find({}).populate("user", { namer: 1, number: 1 });
+  res.json(persons.map((person) => person.toJSON()));
 });
 
 app.get("/api/persons", (req, res) => {
